@@ -1,0 +1,10 @@
+{
+  "name": "agent-skills",
+  "version": "0.1.0",
+  "description": "Custom agent skills for personal use",
+  "author": {
+    "name": "Jesse Templeton",
+    "email": "jtemplet@users.noreply.github.com"
+  },
+  "license": "MIT"
+}
