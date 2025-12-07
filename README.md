@@ -14,9 +14,43 @@ Custom skills for Claude Code. Part of the [agent-marketplace](https://github.co
 
 ## Skills
 
-### example-skill
+### rails-code-review
 
-A simple example skill demonstrating the skill format.
+Systematic technique for comprehensive Rails 8 code reviews covering security vulnerabilities (XSS, SQL injection), Rails conventions, Hotwire/Turbo patterns, performance optimization, and DRY principles with priority-based issue categorization.
+
+**Use when:**
+- Reviewing Rails code before merge or PR
+- Performing security audits
+- Validating Rails 8 conventions and Hotwire patterns
+
+**Output:** Prioritized list of issues with location, problem, fix, and verification steps.
+
+See [README.md](./skills/rails-code-review/README.md) for full documentation.
+
+## Agents
+
+### rails-code-reviewer
+
+Specialized subagent for comprehensive Rails 8 code reviews. Loads the rails-code-review skill and executes systematic review workflow.
+
+**Use via:** Manual invocation or Task tool (when registered as subagent type)
+
+## Commands
+
+### /rails-code-review
+
+One-command trigger for instant Rails code reviews.
+
+**Usage:** `/rails-code-review` - Automatically loads skill and agent workflow
+
+## System Architecture
+
+The Rails code review system uses a three-layer architecture:
+- **Command** (`/rails-code-review`) triggers
+- **Agent** (`rails-code-reviewer`) which loads
+- **Skill** (`rails-code-review`) technique guide
+
+This ensures consistency, maintainability, and flexibility. See [README-rails-code-review-system.md](README-rails-code-review-system.md) for details.
 
 ## Creating New Skills
 

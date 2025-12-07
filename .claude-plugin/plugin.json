@@ -1,10 +1,11 @@
 {
   "name": "agent-skills",
-  "version": "0.1.0",
-  "description": "Custom agent skills for personal use",
+  "version": "1.0.1",
+  "description": "Custom Rails code review skills, agents, and commands for comprehensive Rails 8 security and convention analysis",
   "author": {
-    "name": "Jesse Templeton",
+    "name": "Jason Templeton",
     "email": "jtemplet@users.noreply.github.com"
   },
+  "repository": "https://github.com/jtemplet/agent-skills",
   "license": "MIT"
 }

@@ -1,6 +1,12 @@
+---
+name: terraform-iac-expert
+description: When developing Terraform code, provides guidance utilizing best practices when
+developing architecture within AWS
+---
+
 # Terraform & Infrastructure as Code Expert
 
-## Skill Overview
+## Overview
 This skill transforms Claude into a senior staff-level DevOps Engineer with 10+ years of FAANG experience, specializing in Terraform and Infrastructure as Code across AWS, Azure, and GCP.
 
 ## When to Use This Skill
@@ -67,7 +73,7 @@ project/
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string
-  
+
   validation {
     condition     = contains(["dev", "staging", "prod"], var.environment)
     error_message = "Environment must be dev, staging, or prod."
@@ -78,7 +84,7 @@ variable "instance_count" {
   description = "Number of instances to create"
   type        = number
   default     = 1
-  
+
   validation {
     condition     = var.instance_count > 0 && var.instance_count <= 10
     error_message = "Instance count must be between 1 and 10."
@@ -109,7 +115,7 @@ terraform {
 ```hcl
 terraform {
   required_version = ">= 1.6.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -143,7 +149,7 @@ Every module should have:
 ```hcl
 module "vpc" {
   source  = "git::https://github.com/org/terraform-modules.git//vpc?ref=v2.1.0"
-  
+
   name            = "production-vpc"
   cidr_block      = "10.0.0.0/16"
   environment     = var.environment
@@ -209,7 +215,7 @@ locals {
 
 resource "aws_instance" "web" {
   # ... other configuration ...
-  
+
   tags = merge(
     local.common_tags,
     {
@@ -226,7 +232,7 @@ resource "aws_instance" "web" {
 ```hcl
 resource "aws_instance" "optional" {
   count = var.create_instance ? 1 : 0
-  
+
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
 }
@@ -236,7 +242,7 @@ resource "aws_instance" "optional" {
 ```hcl
 locals {
   vpc_id = var.vpc_id != null ? var.vpc_id : aws_vpc.main[0].id
-  
+
   subnet_ids = var.subnet_ids != null ? var.subnet_ids : aws_subnet.main[*].id
 }
 ```
@@ -245,7 +251,7 @@ locals {
 ```hcl
 resource "aws_eip" "nat" {
   depends_on = [aws_internet_gateway.main]
-  
+
   domain = "vpc"
   tags   = local.common_tags
 }
@@ -260,10 +266,10 @@ func TestTerraformVPC(t *testing.T) {
     terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
         TerraformDir: "../examples/vpc",
     })
-    
+
     defer terraform.Destroy(t, terraformOptions)
     terraform.InitAndApply(t, terraformOptions)
-    
+
     vpcID := terraform.Output(t, terraformOptions, "vpc_id")
     assert.NotEmpty(t, vpcID)
 }
@@ -293,27 +299,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
-      
+
       - name: Terraform Format
         run: terraform fmt -check -recursive
-      
+
       - name: Terraform Init
         run: terraform init -backend=false
-      
+
       - name: Terraform Validate
         run: terraform validate
-      
+
       - name: TFLint
         uses: terraform-linters/setup-tflint@v4
-      
+
       - name: Run TFLint
         run: tflint --recursive
-      
+
       - name: Terraform Plan
         run: terraform plan -no-color
         env:
@@ -394,10 +400,10 @@ mkdir -p $TF_PLUGIN_CACHE_DIR
 # Prefer for_each over count for maps
 resource "aws_instance" "servers" {
   for_each = var.server_config
-  
+
   ami           = each.value.ami
   instance_type = each.value.instance_type
-  
+
   tags = {
     Name = each.key
   }
@@ -406,7 +412,7 @@ resource "aws_instance" "servers" {
 # Use for_each for sets
 resource "aws_subnet" "private" {
   for_each = toset(var.availability_zones)
-  
+
   vpc_id            = aws_vpc.main.id
   availability_zone = each.value
   cidr_block        = cidrsubnet(var.vpc_cidr, 8, index(var.availability_zones, each.value))
@@ -453,7 +459,7 @@ Brief description of what the module does.
 ```hcl
 module "example" {
   source = "./modules/example"
-  
+
   name        = "my-resource"
   environment = "prod"
 }
@@ -481,7 +487,7 @@ resource "aws_security_group" "main" {
   name        = var.name
   description = var.description
   vpc_id      = var.vpc_id
-  
+
   dynamic "ingress" {
     for_each = var.ingress_rules
     content {
@@ -499,12 +505,12 @@ resource "aws_security_group" "main" {
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
-  
+
   filter {
     name   = "name"
     values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
-  
+
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
@@ -520,15 +526,15 @@ locals {
     for idx, az in var.availability_zones :
     cidrsubnet(var.vpc_cidr, 8, idx)
   ]
-  
+
   public_subnets = [
     for idx, az in var.availability_zones :
     cidrsubnet(var.vpc_cidr, 8, idx + 100)
   ]
-  
+
   # Environment-specific configuration
   instance_type = var.environment == "prod" ? "t3.large" : "t3.small"
-  
+
   # Merge tags
   tags = merge(
     var.common_tags,
@@ -609,7 +615,7 @@ terraform workspace list
 # Use in configuration
 resource "aws_instance" "web" {
   # ... configuration ...
-  
+
   tags = {
     Environment = terraform.workspace
   }
