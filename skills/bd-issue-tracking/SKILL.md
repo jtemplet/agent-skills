@@ -193,10 +193,69 @@ bd blocked                      # Find blocked work
 
 **Usage:**
 ```bash
-bd dep add from-id to-id               # from blocks to
-bd dep add auth-epic subtask --type parent-child
-bd dep add main-task found-bug --type discovered-from
+bd dep add task-id dependency-id       # task depends on dependency (dependency blocks task)
+bd dep add subtask auth-epic --type parent-child
+bd dep add found-bug main-task --type discovered-from
 bd dep tree issue-123                  # Visualize dependencies
+```
+
+**Examples:**
+```bash
+# Example: Audit must complete before Conversion can start
+bd dep add conversion-task audit-task  # conversion depends on audit
+# Result: audit-task blocks conversion-task
+# bd ready will show audit-task as ready first
+
+# Example: Task B needs Task A done first
+bd dep add B A                         # B depends on A (A must complete first)
+```
+
+## Verifying Dependencies
+
+After adding dependencies, verify they're correct using `bd show`:
+
+**Reading bd show output:**
+```bash
+bd show task-id
+```
+
+**Output interpretation:**
+```
+Depends on (2):                        # Tasks that block THIS task
+  → dependency-1: Title [P0]           # → arrow: this task depends on these
+  → dependency-2: Title [P1]           # Must complete before this task can start
+
+Blocks (3):                            # Tasks that THIS task blocks
+  ← blocked-task-1: Title [P0]        # ← arrow: this task blocks these
+  ← blocked-task-2: Title [P1]        # These cannot start until this completes
+  ← blocked-task-3: Title [P2]
+```
+
+**Arrow meanings:**
+- `→` (right arrow): Dependencies - tasks this one depends on (incoming blockers)
+- `←` (left arrow): Dependents - tasks this one blocks (outgoing blocks)
+
+**Verification checklist:**
+1. Run `bd show task-id` for the task you added dependencies to
+2. Check "Depends on" section - does this task correctly depend on those tasks?
+3. Check "Blocks" section - does this task correctly block those tasks?
+4. Run `bd ready` - are the right tasks showing as ready?
+5. If wrong, trace through the dependency chain with `bd show` on each task
+
+**Example verification:**
+```bash
+# After: bd dep add conversion audit
+bd show conversion
+# Should show:
+#   Depends on (1):
+#     → audit: Audit landing page [P0]
+# Meaning: conversion is blocked by audit
+
+bd show audit
+# Should show:
+#   Blocks (1):
+#     ← conversion: Convert to JAMStack [P0]
+# Meaning: audit blocks conversion
 ```
 
 ## Planning and Ordering Work
@@ -205,7 +264,7 @@ bd dep tree issue-123                  # Visualize dependencies
 
 - If task B cannot start until task A is complete, always model that as a **blocks** dependency:
   ```bash
-  bd dep add a-id b-id   # A blocks B
+  bd dep add b-id a-id   # B depends on A (A blocks B, A must complete first)
   ```
 - Use **priority** alongside dependencies:
   - Priority 0 = critical / do next once unblocked
@@ -237,9 +296,9 @@ Acceptance Criteria:
 - No passwords are logged or exposed in analytics."
 
 # Encode precedence and hierarchy
-bd dep add login-001 login-002                 # 001 blocks 002
-bd dep add login-epic login-001 --type parent-child
-bd dep add login-epic login-002 --type parent-child
+bd dep add login-002 login-001                 # 002 depends on 001 (001 blocks 002)
+bd dep add login-001 login-epic --type parent-child
+bd dep add login-002 login-epic --type parent-child
 ```
 
 **Choosing what to work on next:**
@@ -263,7 +322,7 @@ When resuming a session:
 ```bash
 # Found issue during work:
 bd create "Found: auth doesn't handle profile permissions"
-bd dep add current-task new-issue --type discovered-from
+bd dep add new-issue current-task --type discovered-from
 # Continue with original task
 ```
 
@@ -285,8 +344,8 @@ bd create "Set up OAuth credentials" -t task
 bd create "Implement authorization flow" -t task
 
 # Link with dependencies
-bd dep add auth-epic auth-setup --type parent-child
-bd dep add auth-setup auth-flow    # blocks
+bd dep add auth-setup auth-epic --type parent-child
+bd dep add auth-flow auth-setup    # auth-flow depends on auth-setup (auth-setup blocks auth-flow)
 ```
 
 ## Integration with TodoWrite
@@ -336,7 +395,7 @@ NEXT: Get user review before closing."
 **Pattern 2: Side Quest**
 1. Discover problem during main task
 2. Create issue: `bd create "Found: inventory needs refactoring"`
-3. Link: `bd dep add main-task new-issue --type discovered-from`
+3. Link: `bd dep add new-issue main-task --type discovered-from`
 4. Assess: blocker or defer?
 5. If blocker: `bd update main-task --status blocked`, work new issue
 6. If deferrable: note in issue, continue main task
@@ -399,6 +458,18 @@ Acceptance Criteria:
 | **status** | Workflow state (open/in_progress/closed) | As work progresses | When changing phases |
 | **priority** | Urgency (0=highest, 3=lowest) | At creation | If priorities shift |
 
+**Priority display formats:**
+- Command line: `0`, `1`, `2`, `3` (when setting with `-p` or `--priority`)
+- Human output: `P0`, `P1`, `P2`, `P3` (in `bd list`, `bd ready` output)
+- bd show output: `[P0]`, `[P1]`, `[P2]`, `[P3]` (in brackets)
+- JSON output: `"priority": 0` (numeric value)
+
+**Priority meanings:**
+- **P0 (priority 0)**: Critical - security issues, data loss, broken builds, production outages
+- **P1 (priority 1)**: High - major features, important bugs, blocking issues
+- **P2 (priority 2)**: Normal - standard work items, nice-to-have features (default)
+- **P3 (priority 3)**: Low - polish, optimization, backlog ideas, future considerations
+
 ## Advanced Features
 
 **JSON output (all commands):**
@@ -406,6 +477,48 @@ Acceptance Criteria:
 bd ready --json
 bd show issue-123 --json
 bd stats --json
+```
+
+### Practical JSON + jq Examples
+
+**List all P0 tasks with titles:**
+```bash
+bd list --status open --priority 0 --json | jq -r '.[] | "\(.id) | P\(.priority) | \(.title)"'
+```
+
+**Count tasks by status:**
+```bash
+bd list --status open --json | jq -r 'length'
+```
+
+**Get task IDs for scripting:**
+```bash
+bd ready --json | jq -r '.[].id'
+```
+
+**Find tasks with dependencies:**
+```bash
+bd list --status open --json | jq -r '.[] | select(.dependency_count > 0) | "\(.id): \(.dependency_count) deps"'
+```
+
+**Extract specific fields:**
+```bash
+bd show task-id --json | jq -r '.description'
+bd show task-id --json | jq -r '.notes'
+```
+
+**Filter by multiple criteria:**
+```bash
+bd list --json | jq -r '.[] | select(.priority == 0 and .status == "open") | .id'
+```
+
+**Bulk operations (with confirmation):**
+```bash
+# List all P2 tasks, then close them
+bd list --priority 2 --json | jq -r '.[].id' | while read id; do
+  echo "Closing $id"
+  bd close "$id" --reason "Bulk cleanup"
+done
 ```
 
 **Bulk operations:**
@@ -423,7 +536,7 @@ bd create --help                # Command-specific help
 
 **Issues seem lost:** Use `bd list --status closed` (closed issues remain in database permanently)
 
-**Dependencies wrong:** `bd show issue-id` shows full tree. Dependencies are directional: `bd dep add from-id to-id` means from blocks to.
+**Dependencies wrong:** `bd show issue-id` shows full tree. Dependencies are directional: `bd dep add task-id dependency-id` means task depends on dependency (dependency blocks task, dependency must complete first).
 
 **Database selection:** bd auto-discovers `.beads/*.db` in project or `~/.beads/default.db`. Use `--db /path/to/db` for explicit selection.
 
