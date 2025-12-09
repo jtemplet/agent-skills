@@ -1,324 +1,702 @@
-# Rails Code Review System
+# Rails Code Review Skill
 
-A comprehensive, multi-layered system for Rails 8 code reviews using skills, agents, and commands.
+Systematic Rails 8 code review skill with security-first approach, modern convention awareness, and pragmatic severity assessment.
 
-## Architecture
+## Quick Start
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     /rails-code-review                          │
-│                     (Slash Command)                             │
-│                           │                                      │
-│                           │ triggers                             │
-│                           ▼                                      │
-│              ┌────────────────────────┐                         │
-│              │  rails-code-reviewer   │                         │
-│              │       (Agent)          │                         │
-│              └────────────────────────┘                         │
-│                           │                                      │
-│                           │ loads & follows                      │
-│                           ▼                                      │
-│              ┌────────────────────────┐                         │
-│              │  rails-code-review     │                         │
-│              │      (Skill)           │                         │
-│              └────────────────────────┘                         │
-└─────────────────────────────────────────────────────────────────┘
-```
+**Three ways to use:**
 
-## Components
-
-### 1. Skill: `rails-code-review`
-**Plugin Path:** `skills/rails-code-review/SKILL.md`
-**Reference:** Use `Skill` tool with name `rails-code-review`
-
-**Purpose:** The foundational technique guide for Rails code reviews.
-
-**Contains:**
-- Systematic review methodology
-- Priority-based checklists (Security → Conventions → Performance → DRY → Logic)
-- Quick reference tables with red flags
-- Before/after code examples
-- Common mistakes and how to avoid them
-- Output format specifications
-
-**Key Features:**
-- CSO-optimized for discoverability
-- Follows `writing-skills` best practices
-- Tested and proven effective
-- Rails 8 and Hotwire-specific
-
-**Use directly when:** You need to manually perform a Rails code review
-
-### 2. Agent: `rails-code-reviewer`
-**Plugin Path:** `agents/rails-code-reviewer.md`
-**Reference:** Follow agent workflow or use Task tool (when registered)
-
-**Purpose:** Specialized subagent that embodies Rails code review expertise.
-
-**Workflow:**
-1. Get git diff context
-2. Load rails-code-review skill
-3. Execute systematic review in priority order
-4. Document issues with actionable fixes
-5. Provide summary and recommendation
-
-**Critical Rules:**
-- Always load the skill first
-- Review in priority order
-- Provide concrete code fixes
-- Include verification steps
-- Note positive findings
-
-**Quality Checklist:**
-- Every issue has: Category, Priority, Location, Problem, Why, Fix, Verification
-- Code examples (before/after) included
-- Summary with counts and assessment provided
-- Clear merge/fix recommendation given
-
-**Use when:** You need a fresh Claude instance to perform comprehensive Rails review (via Task tool or manual invocation)
-
-### 3. Command: `/rails-code-review`
-**Plugin Path:** `commands/rails-code-review.md`
-**Invocation:** `/rails-code-review` (when plugin installed)
-
-**Purpose:** One-command trigger for Rails code reviews.
-
-**Invocation:**
 ```bash
+# 1. Via slash command (simplest)
 /rails-code-review
+
+# 2. Direct skill invocation
+"Use the rails-code-review skill to review my changes"
+
+# 3. Via requesting-code-review workflow
+"Request code review for commits abc123..def456"
 ```
 
-**What it does:**
-1. Loads the rails-code-reviewer agent instructions
-2. Triggers the agent's workflow
-3. Ensures skill is followed exactly
-4. Enforces output format
+---
 
-**Use when:** You want instant Rails code review without manual agent dispatch
+## Core Principles
 
-## Usage Examples
+This skill follows a **verify-first, pragmatic approach**:
 
-### Quick Review via Slash Command
-```markdown
-User: /rails-code-review
+1. ✅ **Verify before flagging** - If tests pass, verify claims before marking as issues
+2. 🔒 **Security first** - Actual vulnerabilities over theoretical concerns
+3. ⚡ **Pragmatic over pure** - Working non-standard code > Non-working standard code
+4. 🎯 **Context matters** - Understands Rails 8 patterns and modern conventions
 
-Claude: [Loads agent → Loads skill → Reviews code → Provides comprehensive report]
+**Golden Rule:** If tests pass and code works, it's probably not broken.
+
+---
+
+## When to Use
+
+### ✅ Use This Skill For:
+
+- **Pre-merge reviews** - Catch issues before code reaches main
+- **Pull request reviews** - Systematic PR evaluation
+- **Security audits** - Focus on vulnerabilities
+- **Convention checks** - Ensure Rails 8 best practices
+- **Performance review** - Identify N+1 queries and bottlenecks
+
+### ❌ Don't Use For:
+
+- **Initial exploration** - Too early, code is still evolving
+- **Non-Rails code** - Specific to Ruby on Rails
+- **Infrastructure** - Use DevOps-specific skills
+- **Trivial changes** - Typos, simple docs updates
+
+---
+
+## Workflow Integration
+
+### Scenario 1: Quick Pre-Commit Check
+
+**Use case:** You've made changes and want a quick sanity check before committing.
+
+```bash
+# Your workflow:
+git add .
+/rails-code-review  # Reviews uncommitted staged changes
+# Review feedback
+# Fix issues
+git commit -m "feature: add drag and drop"
 ```
 
-### Manual Agent Invocation
-```markdown
-User: Follow the rails-code-reviewer agent to review my current branch
+**Time:** 5-10 minutes
+**Best for:** Small changes (< 200 lines)
 
-Claude: [Reads agent file → Follows workflow → Uses skill → Provides report]
+---
+
+### Scenario 2: Pre-PR Comprehensive Review
+
+**Use case:** Feature branch ready, want thorough review before creating PR.
+
+```bash
+# Your workflow:
+git checkout feature/drag-and-drop
+git diff main...HEAD  # See what will be reviewed
+
+# Request review
+"Use the rails-code-review skill to review my feature branch against main"
+
+# Skill will:
+# 1. Get BASE_SHA (main) and HEAD_SHA (current)
+# 2. Run bundle exec rspec to verify tests pass
+# 3. Review git diff main...HEAD
+# 4. Generate comprehensive report
+
+# Review feedback, fix issues
+# Create PR with confidence
 ```
 
-### Direct Skill Usage
-```markdown
-User: Use the rails-code-review skill to check this controller for security issues
+**Time:** 15-30 minutes
+**Best for:** Medium changes (200-500 lines)
 
-Claude: [Loads skill → Applies security checklist → Reports findings]
+---
+
+### Scenario 3: Post-Implementation Agent Review
+
+**Use case:** You've completed a task, want expert review before proceeding.
+
+**Recommended:** Use `superpowers:requesting-code-review` workflow which dispatches this skill automatically.
+
+```bash
+# Your workflow:
+git add . && git commit -m "implement feature"
+
+# Request review with explicit commit range
+BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
+HEAD_SHA=$(git rev-parse HEAD)
+
+# Use requesting-code-review skill (which calls this skill)
+"Request code review for commits $BASE_SHA..$HEAD_SHA"
 ```
 
-### Future: Task Tool Dispatch (when agent is registered)
-```python
-Task(
-  subagent_type="rails-code-reviewer",
-  description="Review Rails changes",
-  prompt="Review feature/auth branch against main for security issues"
-)
+**Time:** 20-45 minutes
+**Best for:** Any size change, most thorough review
+
+---
+
+### Scenario 4: Large PR Review (500+ lines)
+
+**Use case:** Big feature, need structured review approach.
+
+```bash
+# Strategy: Review in phases
+
+# Phase 1: Security & Migrations (critical)
+"Use rails-code-review skill to check security issues in commits abc123..def456"
+
+# Phase 2: Core logic & performance
+"Use rails-code-review skill to check performance in app/models/ changes"
+
+# Phase 3: Views & controllers
+"Review controllers and views for Rails conventions"
+
+# Phase 4: Full pass
+/rails-code-review  # Final comprehensive check
 ```
 
-## Review Process Flow
+**Time:** 60-120 minutes
+**Best for:** Large changes (> 500 lines)
 
-```
-1. Trigger (command/agent/skill)
-          ↓
-2. Load rails-code-review skill
-          ↓
-3. Get git diff: current branch vs main
-          ↓
-4. Security Review (CRITICAL)
-   - XSS vulnerabilities
-   - SQL injection
-   - Mass assignment
-   - Unsafe rendering
-          ↓
-5. Rails Conventions Review (HIGH)
-   - Rails 8 Way patterns
-   - Hotwire usage
-   - RESTful conventions
-          ↓
-6. Performance Review (HIGH)
-   - N+1 queries
-   - Missing indexes
-   - Caching opportunities
-          ↓
-7. Code Duplication Review (MEDIUM)
-   - Extract to partials
-   - Shared helpers
-   - DRY violations
-          ↓
-8. CSS/Styling Review (LOW)
-   - Tailwind v4 syntax
-   - Redundant classes
-          ↓
-9. Bug & Logic Review (ALL)
-   - Logic errors
-   - Missing validations
-   - Edge cases
-          ↓
-10. Generate Report
-    - Issues by priority
-    - Critical actions
-    - Positive findings
-    - Merge recommendation
+---
+
+## Correct Usage Patterns
+
+### Pattern 1: Explicit Commit Ranges (Recommended)
+
+```bash
+# ✅ GOOD: Explicit range
+BASE_SHA=21b6733c
+HEAD_SHA=d4a40ac1
+"Review Rails changes in commits $BASE_SHA..$HEAD_SHA"
 ```
 
-## Output Format (Standardized Across All Three)
+**Why:** Gives skill exact context, can verify diffs match tests.
+
+### Pattern 2: Branch Comparison
+
+```bash
+# ✅ GOOD: Clear branch reference
+"Review my feature/auth branch against main branch"
+```
+
+**Why:** Skill uses `git diff main...HEAD` to get changes.
+
+### Pattern 3: Current Staged Changes
+
+```bash
+# ✅ GOOD: For pre-commit checks
+git add app/controllers/users_controller.rb
+"Review my staged changes"
+```
+
+**Why:** Quick feedback loop before commit.
+
+### ❌ Anti-Patterns to Avoid
+
+```bash
+# ❌ BAD: No context
+"Review my code"
+# Skill doesn't know what to review
+
+# ❌ BAD: Too vague
+"Check if this is good"
+# No specific focus area
+
+# ❌ BAD: Review entire codebase
+"Review all controllers for security"
+# Should review changes, not entire codebase
+```
+
+---
+
+## Integration with Other Skills
+
+### With `superpowers:requesting-code-review`
+
+**Best practice workflow:**
+
+```bash
+# 1. Complete your implementation
+git add . && git commit -m "feature: implement drag-and-drop"
+
+# 2. Request review (automatically uses rails-code-review)
+"Request code review for this commit"
+
+# 3. Requesting-code-review will:
+#    - Get git diff
+#    - Dispatch appropriate reviewer (rails-code-review for Rails)
+#    - Generate comprehensive report
+#    - Save to docs/code-reviews/
+
+# 4. Review feedback, address issues
+
+# 5. Request re-review if needed
+"Request code review for latest commit"
+```
+
+### With `test-writer-fixer`
+
+**Workflow for adding test coverage:**
+
+```bash
+# 1. Get code review
+/rails-code-review
+# Feedback: "Missing test coverage for Document#fulfill method"
+
+# 2. Write tests
+"Use test-writer-fixer to add tests for Document#fulfill"
+
+# 3. Verify coverage
+bundle exec rspec spec/models/document_spec.rb
+
+# 4. Re-review
+/rails-code-review
+# Should now pass test coverage checks
+```
+
+### With `systematic-debugging`
+
+**Workflow for fixing review issues:**
+
+```bash
+# 1. Get code review
+/rails-code-review
+# Feedback: "N+1 query detected in UsersController#index"
+
+# 2. Debug the issue
+"Use systematic-debugging to investigate N+1 query in UsersController#index"
+
+# 3. Fix based on root cause
+
+# 4. Verify fix
+bundle exec rspec
+/rails-code-review  # Should clear the issue
+```
+
+---
+
+## Output Format
+
+The skill generates **Markdown-formatted reports** with:
+
+### Report Structure
 
 ```markdown
 # Rails Code Review Report
 
-**Branch:** feature/add-authentication
-**Base:** main
-**Files Changed:** 12
+**Branch:** `feature/drag-and-drop`
+**Base:** `main`
+**Commits:** `abc123..def456`
+**Review Date:** 2025-12-09
 
----
+## Executive Summary
 
-## [Category - PRIORITY] Issue Title
+[1-2 sentence overview]
 
-**Location:** `app/controllers/users_controller.rb:45`
+**Overall Assessment:** [APPROVED / CONDITIONAL APPROVAL / BLOCK MERGE]
+
+## Issues Found
+
+### 🔴 Issue #1: Missing Authorization in Public Controller
+
+**Category:** Security
+**Priority:** CRITICAL
+**Location:** `app/controllers/public/documents_controller.rb:10-17`
 
 **Problem:**
-[Description with code snippet]
+[Description with code]
 
-**Why it matters:**
+**Why It Matters:**
 [Impact explanation]
 
 **Fix:**
 ```ruby
-# Before:
-[original code]
+# Before
+def update
+  document.update(params)
+end
 
-# After:
-[corrected code]
+# After
+def update
+  authorize [:public, document], :update?
+  document.update(params)
+end
 ```
 
 **Verification:**
-1. [Test step]
-2. [Expected result]
+```bash
+bundle exec rspec spec/requests/public/documents_spec.rb
+```
+
+## Summary Table
+
+| Priority | Category | Count | Issues |
+|----------|----------|-------|--------|
+| 🔴 CRITICAL | Security | 1 | Missing authorization |
+| 🟡 HIGH | Performance | 2 | N+1 queries |
+| 🟠 MEDIUM | Code Quality | 3 | Duplication |
+| 🟢 LOW | CSS/Styling | 1 | Important flag |
+
+## Positive Findings ✅
+
+1. Excellent test coverage (98%)
+2. Proper use of transactions
+3. Clean Hotwire implementation
+
+## Critical Actions Required
+
+1. Add authorization checks (Issue #1)
+2. Fix N+1 queries (Issues #2, #3)
+
+## Overall Merge Recommendation
+
+⚠️ **CONDITIONAL APPROVAL** - Fix critical issues first.
+```
+
+### Priority Levels
+
+The skill uses **strict severity guidelines**:
+
+| Priority | Criteria | Examples |
+|----------|----------|----------|
+| 🔴 **CRITICAL** | Security vulnerabilities, data loss, broken functionality | SQL injection, missing auth, 500 errors |
+| 🟡 **HIGH** | Architecture problems, missing error handling, performance blockers | N+1 in main views, no rescue blocks |
+| 🟠 **MEDIUM** | Non-standard patterns that work, duplication, missing tests | Works but unconventional, DRY violations |
+| 🟢 **LOW** | Style, minor optimizations, documentation | CSS important flags, could extract constant |
+
+**Key Rule:** If tests pass and code works, maximum priority is MEDIUM.
+
+---
+
+## Rails 8 Modern Patterns
+
+The skill **understands and accepts** these modern Rails patterns:
+
+### ✅ Will NOT Flag These
+
+1. **Implicit Turbo Stream Responses**
+   ```ruby
+   def update
+     @document.update(params)
+     # No explicit render needed in Rails 8
+   end
+   ```
+
+2. **where.missing Syntax** (Rails 7+)
+   ```ruby
+   scope :unassigned, -> { where.missing(:deal_requirement_document) }
+   ```
+
+3. **Concerns in Model Subdirectories**
+   ```ruby
+   # app/models/document/fulfillable.rb
+   class Document
+     module Fulfillable
+       extend ActiveSupport::Concern
+     end
+   end
+   ```
+
+4. **broadcast_refresh_to**
+   ```ruby
+   broadcast_refresh_to(@deal)  # Valid full-page morph pattern
+   ```
+
+5. **Solid Stack Usage**
+   - Solid Queue, Solid Cache, Solid Cable
+
+---
+
+## Pre-Review Validation
+
+The skill performs **verification before flagging**:
+
+```bash
+# Skill automatically checks:
+1. Are tests passing? (bundle exec rspec)
+2. What's the Rails version? (Gemfile.lock)
+3. What actually changed? (git diff BASE..HEAD)
+4. Does the pattern work? (verification before flagging)
+```
+
+**This means:**
+- Fewer false positives
+- More accurate severity levels
+- Context-aware recommendations
+- Respects modern Rails conventions
+
+---
+
+## Common Mistakes & Solutions
+
+### Mistake 1: Reviewing Without Commit Context
+
+```bash
+# ❌ Wrong
+"Review my code for issues"
+
+# ✅ Right
+BASE=$(git rev-parse origin/main)
+HEAD=$(git rev-parse HEAD)
+"Review commits $BASE..$HEAD for security issues"
+```
+
+### Mistake 2: Expecting Instant Review of Large Changes
+
+```bash
+# ❌ Wrong expectation
+git diff --stat  # Shows 1500 lines changed
+/rails-code-review  # "Give me review in 2 minutes"
+
+# ✅ Right approach
+# Large PRs need 60+ minutes for thorough review
+# Consider splitting PR or reviewing in phases
+```
+
+### Mistake 3: Ignoring Test Status
+
+```bash
+# ❌ Wrong
+bundle exec rspec  # 5 failing tests
+/rails-code-review  # Review anyway
+
+# ✅ Right
+bundle exec rspec  # Fix failing tests first
+/rails-code-review  # Then review
+```
+
+### Mistake 4: Not Acting on Critical Issues
+
+```bash
+# ❌ Wrong
+/rails-code-review
+# Report: "🔴 CRITICAL: SQL injection vulnerability"
+git push  # Push anyway
+
+# ✅ Right
+/rails-code-review
+# Report: "🔴 CRITICAL: SQL injection vulnerability"
+# Fix the issue immediately
+bundle exec rspec  # Verify fix
+/rails-code-review  # Re-review
+git push  # Push when clean
+```
+
+---
+
+## Troubleshooting
+
+### Issue: "Skill flagged working code as broken"
+
+**Solution:** The skill now verifies before flagging, but if this happens:
+
+1. Check if tests actually pass: `bundle exec rspec`
+2. Verify the pattern works in Rails 8
+3. Provide feedback: the skill may need updating for new patterns
+
+### Issue: "Review took too long"
+
+**Expected times:**
+- < 50 lines: 5-10 min
+- 50-200 lines: 15-30 min
+- 200-500 lines: 30-60 min
+- 500+ lines: 60-120 min
+
+**Solutions:**
+- Split large PRs into smaller chunks
+- Review in phases (security first, then logic, etc.)
+- Use multiple reviewers for huge changes
+
+### Issue: "Severity seems wrong"
+
+**Check:**
+- CRITICAL = Security vulnerability, data loss, or broken functionality
+- HIGH = Architecture problem or performance blocker
+- MEDIUM = Works but non-standard
+- LOW = Style or optimization
+
+If tests pass and code works, it can't be CRITICAL or HIGH.
+
+### Issue: "False positive on Rails 8 pattern"
+
+**Report it!** The skill should understand modern Rails patterns. If it incorrectly flags:
+- `where.missing`
+- Implicit Turbo responses
+- `broadcast_refresh_to`
+- Concerns in model subdirectories
+
+This is a bug in the skill that should be fixed.
+
+---
+
+## Success Metrics
+
+A successful review session should:
+
+- ✅ Catch actual security vulnerabilities
+- ✅ Identify real performance problems (N+1 queries)
+- ✅ Suggest Rails 8 convention improvements
+- ✅ Provide actionable fixes with code examples
+- ✅ Note positive findings (not just problems)
+- ✅ Give clear merge/fix recommendation
+- ✅ Complete in reasonable time (< 30 min for typical PR)
+
+---
+
+## Advanced Usage
+
+### Custom Focus Areas
+
+```bash
+# Focus on specific category
+"Use rails-code-review skill to check security only"
+
+# Focus on specific files
+"Review security in app/controllers/public/documents_controller.rb"
+
+# Focus on specific issue type
+"Check for N+1 queries in the user listing changes"
+```
+
+### Incremental Review (Large PRs)
+
+```bash
+# Review phase by phase
+"Review database migrations for safety"
+# Fix issues
+
+"Review models for performance"
+# Fix issues
+
+"Review controllers for security"
+# Fix issues
+
+"Review views for conventions"
+# Final pass
+```
+
+### Re-Review After Fixes
+
+```bash
+# Initial review
+/rails-code-review
+# Output: "3 CRITICAL, 5 HIGH, 2 MEDIUM issues"
+
+# Fix critical and high issues
+# Commit fixes
+
+# Re-review (only reviews new changes)
+"Review my latest commit for the fixes"
+# Output: "All CRITICAL and HIGH issues resolved"
+```
+
+---
+
+## Integration with CI/CD
+
+While this skill is designed for **human-driven reviews**, it can inform CI checks:
+
+```yaml
+# .github/workflows/review.yml (conceptual)
+name: Rails Review
+on: pull_request
+
+jobs:
+  automated_checks:
+    runs-on: ubuntu-latest
+    steps:
+      # Run automated tools first
+      - run: bundle exec brakeman -q  # Security
+      - run: bundle exec rubocop      # Style
+      - run: bundle exec rspec        # Tests
+
+      # Then request human review with this skill
+      # (Human reviews catch what tools miss)
+```
+
+**Note:** This skill is most effective as a **human-assisted review tool**, not a fully automated CI check.
+
+---
+
+## Maintenance & Updates
+
+### Skill Location
+**File:** `skills/rails-code-review/SKILL.md`
+
+### Recent Improvements (December 2025)
+- ✅ Added verify-first approach
+- ✅ Rails 8 modern pattern awareness
+- ✅ Stricter severity guidelines
+- ✅ Proper Markdown output
+- ✅ Pre-review validation steps
+- ✅ Explicit git commit range handling
+
+### How to Contribute Improvements
+
+If you find patterns that should be:
+- **Accepted:** Add to "Don't flag these" section
+- **Flagged:** Add to appropriate priority checklist
+- **Clarified:** Add examples to SKILL.md
+
+---
+
+## Quick Reference Card
+
+```bash
+┌─────────────────────────────────────────────────────┐
+│         RAILS CODE REVIEW QUICK REFERENCE           │
+├─────────────────────────────────────────────────────┤
+│ QUICK START                                         │
+│   /rails-code-review          # Instant review      │
+│                                                     │
+│ WITH COMMIT RANGE                                   │
+│   BASE=$(git rev-parse origin/main)                 │
+│   HEAD=$(git rev-parse HEAD)                        │
+│   "Review commits $BASE..$HEAD"                     │
+│                                                     │
+│ REVIEW PRIORITIES                                   │
+│   1. Security     (CRITICAL) - XSS, SQL injection   │
+│   2. Conventions  (HIGH)     - Rails 8 Way          │
+│   3. Performance  (HIGH)     - N+1, indexes         │
+│   4. Duplication  (MEDIUM)   - DRY violations       │
+│   5. Style        (LOW)      - CSS, formatting      │
+│                                                     │
+│ BEFORE REVIEW                                       │
+│   bundle exec rspec           # Tests must pass     │
+│                                                     │
+│ AFTER CRITICAL ISSUES                               │
+│   Fix immediately → Re-review → Then merge          │
+│                                                     │
+│ ESTIMATED TIMES                                     │
+│   < 50 lines:   5-10 min                           │
+│   50-200:       15-30 min                          │
+│   200-500:      30-60 min                          │
+│   500+:         60-120 min (consider splitting)    │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## Getting Help
+
+**Skill not working as expected?**
+
+1. Check Rails version: `grep "rails " Gemfile.lock`
+2. Verify tests pass: `bundle exec rspec`
+3. Provide explicit commit range
+4. Check the skill file: `skills/rails-code-review/SKILL.md`
+
+**Found a bug or false positive?**
+
+Update the skill file or report to the skill maintainer.
+
+**Need different review approach?**
+
+Consider:
+- `superpowers:code-reviewer` - General code review (non-Rails specific)
+- `superpowers:systematic-debugging` - For investigating issues
+- `superpowers:test-writer-fixer` - For test coverage gaps
 
 ---
 
 ## Summary
 
-### Issues by Priority
-| Priority | Count | Categories |
-|----------|-------|------------|
-| HIGH     | 2     | Security, Conventions |
-| MEDIUM   | 3     | Performance, DRY |
+**rails-code-review** is a Rails 8-aware code review skill that:
 
-### Critical Actions Required
-1. Fix XSS vulnerability in user profile
-2. Add missing authorization checks
+✅ Understands modern Rails patterns
+✅ Verifies before flagging issues
+✅ Provides actionable fixes
+✅ Outputs proper Markdown reports
+✅ Integrates with development workflows
+✅ Uses strict severity guidelines
 
-### Positive Findings
-✅ Excellent test coverage
-✅ Proper use of transactions
-✅ RESTful routing
+**Best used for:** Pre-merge reviews, PR evaluation, security audits, convention checks, and performance optimization.
 
-### Overall Assessment
-**Code Quality:** Good
-**Security:** Needs attention (2 HIGH issues)
-**Recommendation:** Fix security issues before merge
-```
-
-## Benefits of This System
-
-### Consistency
-- Same methodology across manual reviews, agent reviews, and command reviews
-- Standardized output format
-- Predictable quality
-
-### Efficiency
-- Slash command for instant review
-- Agent for subagent dispatch
-- Skill for manual review
-
-### Maintainability
-- Single source of truth (skill)
-- Agent references skill
-- Command references agent
-- Update skill → everything improves
-
-### Flexibility
-- Use at appropriate level (command/agent/skill)
-- Combine with other tools (`requesting-code-review`, `systematic-debugging`)
-- Adapt to workflow needs
-
-## Integration with Other Tools
-
-### Works With
-- `requesting-code-review` - Can dispatch this agent
-- Git workflows - Reviews branches before merge
-- PR processes - Pre-PR quality gate
-
-### Complements
-- Generic `code-reviewer` - This adds Rails-specific depth
-- `systematic-debugging` - For investigating found issues
-- `test-writer-fixer` - For adding test coverage
-
-## Maintenance
-
-### To Update Review Criteria
-1. Edit `skills/rails-code-review/SKILL.md`
-2. Add new checklist items, examples, or categories
-3. Test changes
-4. Agent and command automatically use updated criteria
-
-### To Change Agent Behavior
-1. Edit `agents/rails-code-reviewer.md`
-2. Modify workflow steps or quality checklist
-3. Command automatically uses updated agent
-
-### To Customize Command
-1. Edit `commands/rails-code-review.md`
-2. Add project-specific instructions
-3. Maintains reference to agent
-
-## Success Metrics
-
-A successful review session:
-- ✅ Catches security vulnerabilities before merge
-- ✅ Identifies Rails convention violations
-- ✅ Suggests performance optimizations
-- ✅ Provides actionable fixes with code examples
-- ✅ Notes positive findings (not just problems)
-- ✅ Gives clear merge/fix/refactor recommendation
-- ✅ Takes 5-15 minutes depending on change size
-
-## Proven Effectiveness
-
-Tested on real Rails code (`public_deal_documents_without_requirement` branch):
-
-**Issues Found:**
-- 1 HIGH security issue (XSS vulnerability)
-- 4 MEDIUM issues (authorization, strong params, performance)
-- 3 LOW issues (duplication, clarity)
-- 1 critical bug (mailer class name typo)
-
-**Positive Findings Noted:**
-- Excellent test coverage
-- Proper use of transactions
-- Correct async patterns
-- RESTful routing
-
-**Result:** Clear, actionable review with specific fixes and merge recommendation
-
-## Getting Started
-
-1. **Instant review:** `/rails-code-review`
-2. **Manual review:** "Follow rails-code-reviewer agent"
-3. **Learn technique:** Read `skills/rails-code-review/SKILL.md`
-
-That's it! The system handles the rest.
+**Core philosophy:** Pragmatic, verification-first reviews that respect working code and understand Rails 8 conventions.
