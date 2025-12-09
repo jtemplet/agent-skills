@@ -132,11 +132,24 @@ bd ready --priority 0           # Filter by priority
 bd ready --assignee alice       # Filter by assignee
 ```
 
-**Create issue (always quote titles):**
+**Create issue (always quote titles, always include a description):**
 ```bash
-bd create "Fix login bug"
-bd create "Add OAuth" -p 0 -t feature
-bd create "Write tests" -d "Unit tests for auth module"
+bd create "Add password visibility toggle" \
+  -d "Problem Statement: Users can't verify their password input on the login form, leading to failed logins.
+
+Acceptance Criteria:
+- Users can toggle password visibility on the login form.
+- Default state keeps password masked.
+- No passwords are logged or exposed in analytics." \
+  -p 1 -t feature
+
+bd create "Fix login 500 error" \
+  -d "Problem Statement: Logging in with valid credentials sometimes redirects to a 500 error.
+
+Acceptance Criteria:
+- Valid logins consistently redirect to /dashboard.
+- Errors are logged with correlation IDs." \
+  -p 0 -t bug
 ```
 
 **Update status:**
@@ -185,6 +198,64 @@ bd dep add auth-epic subtask --type parent-child
 bd dep add main-task found-bug --type discovered-from
 bd dep tree issue-123                  # Visualize dependencies
 ```
+
+## Planning and Ordering Work
+
+**Encoding precedence (dependencies + priority):**
+
+- If task B cannot start until task A is complete, always model that as a **blocks** dependency:
+  ```bash
+  bd dep add a-id b-id   # A blocks B
+  ```
+- Use **priority** alongside dependencies:
+  - Priority 0 = critical / do next once unblocked
+  - Priority 1 = high
+  - Priority 2 = normal
+  - Priority 3 = low / nice-to-have
+
+**Example mini-project:**
+```bash
+# Epic (overall goal)
+bd create "Improve login UX" -t epic -p 1 -d "Problem Statement: Login failures are high...
+
+Acceptance Criteria:
+- Login-related support tickets decrease by 30%."
+
+# Task 001: backend work
+bd create "Harden login error handling" -t task -p 0 -d "Problem Statement: Valid logins sometimes result in 500 errors.
+
+Acceptance Criteria:
+- Valid logins consistently redirect to /dashboard.
+- All login errors are logged with correlation IDs."
+
+# Task 002: password visibility toggle (depends on 001)
+bd create "Add password visibility toggle" -t task -p 0 -d "Problem Statement: Users can't verify their password input on the login form, leading to failed logins.
+
+Acceptance Criteria:
+- Users can toggle visibility of password input on login form.
+- Default state is masked.
+- No passwords are logged or exposed in analytics."
+
+# Encode precedence and hierarchy
+bd dep add login-001 login-002                 # 001 blocks 002
+bd dep add login-epic login-001 --type parent-child
+bd dep add login-epic login-002 --type parent-child
+```
+
+**Choosing what to work on next:**
+
+When resuming a session:
+
+1. Run:
+   ```bash
+   bd ready --json
+   ```
+2. Consider tasks where all **blocking dependencies are closed**; treat these as "ready-ready".
+3. Within that set, order work by:
+   - priority ascending (0 → 3)
+   - then age (oldest first) or your judgment
+4. Start with the top item. When reporting to the user, summarize as:
+   - "Recommended order: 1) <id> (P0) – <short description>, 2) <id> (P1) – ..."
 
 ## Issue Lifecycle
 
@@ -281,11 +352,32 @@ NEXT: Get user review before closing."
 
 **Quick checklist:**
 - Title: Clear, specific, action-oriented
-- Description: Problem statement (WHY) - immutable
+- Description: Immutable Problem Statement + 1–3 lines of high-level Acceptance Criteria (write for future-you)
 - Design: HOW to build (can change)
-- Acceptance: WHAT success looks like (stays stable)
+- Acceptance: Detailed success checklist (can also live in `acceptance-criteria` field)
 - Priority: 0=critical, 1=high, 2=normal, 3=low
 - Type: bug/feature/task/epic/chore
+
+**Description template (copy into `-d` when creating issues):**
+```text
+Problem Statement: [1–2 sentences explaining the underlying problem and context]
+
+Acceptance Criteria:
+- [outcome-focused bullet 1]
+- [outcome-focused bullet 2]
+```
+
+**Example:**
+```bash
+bd create "Add password visibility toggle" \
+  -d "Problem Statement: Users can't verify their password input on the login form, leading to failed logins.
+
+Acceptance Criteria:
+- Users can toggle password visibility on the login form.
+- Default state keeps password masked.
+- No passwords are logged or exposed in analytics." \
+  -p 1 -t feature
+```
 
 **Acceptance criteria test:**
 "If I changed implementation, would these criteria still apply?"
@@ -300,7 +392,7 @@ NEXT: Get user review before closing."
 
 | Field | Purpose | When to Set | Update Frequency |
 |-------|---------|-------------|------------------|
-| **description** | Immutable problem statement | At creation | Never |
+| **description** | Immutable Problem Statement + brief Acceptance Criteria | At creation | Never |
 | **design** | Initial approach, architecture | During planning | Rarely |
 | **acceptance-criteria** | Deliverables checklist | When design clear | Mark completed |
 | **notes** | Session handoff (COMPLETED/IN_PROGRESS/NEXT) | During work | At milestones |
