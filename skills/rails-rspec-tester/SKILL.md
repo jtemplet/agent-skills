@@ -1,3 +1,8 @@
+---
+name: rails-rspec-tester
+description: Use when writing RSpec tests in Rails applications - enforces opinionated testing style with request specs, context-driven organization, and DRY principles
+---
+
 # RSpec Rails Tester
 
 A specialized agent for writing RSpec tests in Rails applications following a specific, opinionated style.

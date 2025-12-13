@@ -27,6 +27,63 @@ Systematic technique for comprehensive Rails 8 code reviews covering security vu
 
 See [README.md](./skills/rails-code-review/README.md) for full documentation.
 
+### rails-rspec-tester
+
+Opinionated RSpec testing style for Rails applications emphasizing request specs, clean test organization, and DRY principles.
+
+**Use when:**
+- Writing new RSpec tests for Rails applications
+- Converting controller tests to request specs
+- Refactoring existing tests to follow best practices
+- Reviewing test code for style compliance
+
+**Key principles:**
+- Request specs over controller tests (always)
+- Setup in `let`/`let!` blocks, not in `it` blocks
+- HTTP requests in `subject` blocks
+- Context-driven organization
+- Concise assertions
+
+See [SKILL.md](./skills/rails-rspec-tester/SKILL.md) for full documentation.
+
+### terraform-iac-expert
+
+Senior staff-level DevOps expertise for Terraform and Infrastructure as Code across AWS, Azure, and GCP with 10+ years of FAANG experience.
+
+**Use when:**
+- Writing or reviewing Terraform configurations
+- Designing cloud infrastructure
+- Creating reusable Terraform modules
+- Debugging Terraform state or deployment issues
+- Setting up CI/CD pipelines for infrastructure
+- Implementing security and compliance best practices
+
+**Key principles:**
+- Infrastructure as Code (IaC) first approach
+- Modular, reusable, maintainable infrastructure
+- Security by default with least privilege
+- Multi-cloud expertise
+- Environment isolation and workspace management
+
+See [SKILL.md](./skills/terraform-iac-expert/SKILL.md) for full documentation.
+
+### bd-issue-tracking
+
+Graph-based issue tracker for persistent memory across sessions with complex dependency management.
+
+**Use when:**
+- Multi-session work spanning multiple compaction cycles or days
+- Complex dependencies with blockers or prerequisites
+- Knowledge work with fuzzy boundaries
+- Need project memory to resume after weeks away
+
+**Use TodoWrite instead when:**
+- Single-session tasks completing within current session
+- Linear execution with no branching
+- All information already in conversation
+
+See [SKILL.md](./skills/bd-issue-tracking/SKILL.md) for full documentation.
+
 ## Agents
 
 ### rails-code-reviewer
