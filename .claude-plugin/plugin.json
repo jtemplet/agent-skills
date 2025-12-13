@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Custom Rails code review skills, agents, and commands for comprehensive Rails 8 security and convention analysis",
   "author": {
     "name": "Jason Templeton",
