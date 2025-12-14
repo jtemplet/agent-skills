@@ -67,23 +67,6 @@ Senior staff-level DevOps expertise for Terraform and Infrastructure as Code acr
 
 See [SKILL.md](./skills/terraform-iac-expert/SKILL.md) for full documentation.
 
-### bd-issue-tracking
-
-Graph-based issue tracker for persistent memory across sessions with complex dependency management.
-
-**Use when:**
-- Multi-session work spanning multiple compaction cycles or days
-- Complex dependencies with blockers or prerequisites
-- Knowledge work with fuzzy boundaries
-- Need project memory to resume after weeks away
-
-**Use TodoWrite instead when:**
-- Single-session tasks completing within current session
-- Linear execution with no branching
-- All information already in conversation
-
-See [SKILL.md](./skills/bd-issue-tracking/SKILL.md) for full documentation.
-
 ## Agents
 
 ### rails-code-reviewer
