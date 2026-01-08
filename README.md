@@ -67,6 +67,50 @@ Senior staff-level DevOps expertise for Terraform and Infrastructure as Code acr
 
 See [SKILL.md](./skills/terraform-iac-expert/SKILL.md) for full documentation.
 
+### python-code-review
+
+Comprehensive Python code review following PEP 8 and Google Python Style Guide standards, with emphasis on security, type hints, and best practices.
+
+**Use when:**
+- Reviewing Python code before merge or PR
+- Performing security audits (SQL injection, hardcoded secrets, unsafe functions)
+- Validating PEP 8 and Google Style Guide compliance
+- Checking type hints and documentation
+- Analyzing performance and maintainability
+
+**Key principles:**
+- Consistency within project > rigid rule adherence
+- Wait for third occurrence before flagging duplication (Sandi Metz principle)
+- Prioritize: Critical (security/bugs) > High (readability) > Medium (style) > Low (nitpicks)
+- Focus on changes being made, not rewriting entire codebase
+
+**Output:** Structured review with severity levels, specific line numbers, before/after code examples, and rationale for each issue.
+
+See [SKILL.md](./skills/python-code-review/SKILL.md) for full documentation.
+
+### sandi-metz-python-style
+
+Write or refactor Python code following Sandi Metz's object-oriented design principles from "Practical Object-Oriented Design in Ruby" (POODR), adapted for Python.
+
+**Use when:**
+- Writing new Python code with strong OOD principles
+- Refactoring Python code to improve design
+- Reviewing Python code for architectural issues
+- Learning object-oriented design patterns
+
+**Core principles:**
+- Wait for duplication (rule of three) before abstracting
+- Methods should be small and do one thing
+- Classes should have single, cohesive responsibilities
+- Max 4 parameters per method
+- Inject dependencies, never hardcode
+- Tell, Don't Ask (avoid deep attribute chaining)
+- Shallow inheritance (1-2 levels), prefer composition
+
+**Output:** TRUE code (Transparent, Reasonable, Usable, Exemplary) with proper messaging, dependency injection, and clear responsibilities.
+
+See [SKILL.md](./skills/sandi-metz-python-style/SKILL.md) for full documentation.
+
 ## Agents
 
 ### rails-code-reviewer
@@ -75,6 +119,23 @@ Specialized subagent for comprehensive Rails 8 code reviews. Loads the rails-cod
 
 **Use via:** Manual invocation or Task tool (when registered as subagent type)
 
+### python-feature-developer
+
+Guided Python feature development agent that leads through a 4-phase workflow: discovery, implementation, simplification, and linting. Uses the sandi-metz-python-style skill for implementation guidance.
+
+**Triggers on:**
+- "implement [feature] in Python"
+- "create a Python [component]"
+- "add [functionality] to Python code"
+
+**Workflow phases:**
+1. **Discovery** - Asks clarifying questions about inputs, outputs, and edge cases
+2. **Implementation** - Writes code following Sandi Metz principles
+3. **Simplification** - Refines code while preserving readability
+4. **Linting** - Applies ruff for PEP8/Google Python Style compliance
+
+**Output:** Production-ready Python code written to files with type hints, docstrings, and error handling
+
 ## Commands
 
 ### /rails-code-review
@@ -82,6 +143,28 @@ Specialized subagent for comprehensive Rails 8 code reviews. Loads the rails-cod
 One-command trigger for instant Rails code reviews.
 
 **Usage:** `/rails-code-review` - Automatically loads skill and agent workflow
+
+### /python-code-review
+
+One-command trigger for comprehensive Python code reviews following PEP 8 and Google Style Guide.
+
+**Usage:** `/python-code-review` - Automatically loads skill and executes systematic review
+
+### /sandi-metz-python
+
+One-command trigger for writing or refactoring Python code using Sandi Metz's OOD principles.
+
+**Usage:** `/sandi-metz-python` - Automatically loads skill and applies POODR principles to Python
+
+### /python-feature-dev
+
+Guided Python feature development with discovery, implementation, simplification, and linting phases.
+
+**Usage:**
+- `/python-feature-dev "add user authentication"` - With feature description
+- `/python-feature-dev` - Interactive mode (prompts for feature description)
+
+**Result:** Invokes python-feature-developer agent for structured workflow
 
 ## System Architecture
 
