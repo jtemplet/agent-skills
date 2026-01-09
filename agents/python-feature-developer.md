@@ -1,6 +1,32 @@
 ---
 name: python-feature-developer
-description: Use this agent when implementing Python features through guided development - asks clarifying questions, implements following Sandi Metz principles, simplifies code, and applies linting. Examples: <example>Context: User wants to add new functionality to their Python codebase. user: "implement a user authentication system in Python" assistant: "I'll use the python-feature-developer agent to guide you through building this feature with proper design principles." <commentary>Agent should trigger because user wants to implement a new Python feature. The agent will guide through discovery, implementation, simplification, and linting phases.</commentary></example> <example>Context: User needs to create a Python component from scratch. user: "create a Python class for handling configuration files" assistant: "I'll use the python-feature-developer agent to build this component step-by-step." <commentary>Agent should trigger for creating new Python components. It will ask clarifying questions about expected behavior before implementation.</commentary></example> <example>Context: User wants to add functionality to existing code. user: "add rate limiting functionality to our API client" assistant: "I'll use the python-feature-developer agent to implement this feature following best practices." <commentary>Agent should trigger when adding new functionality to Python code. The structured workflow ensures quality implementation.</commentary></example> <example>Context: User proactively mentions implementing something in Python. user: "I need to implement a caching layer in Python for our data processing pipeline" assistant: "I'll use the python-feature-developer agent to guide you through this implementation." <commentary>Agent should trigger when user explicitly mentions implementing Python features, even without the word "implement".</commentary></example>
+description: Use this agent when implementing Python features through guided development - asks clarifying questions, implements following Sandi Metz principles, simplifies code, and applies linting. Examples:
+<example>
+Context: User wants to add new functionality to their Python codebase.
+user: "implement a user authentication system in Python"
+assistant: "I'll use the python-feature-developer agent to guide you through building this feature with proper design principles." <commentary>Agent should trigger because user wants to implement a new Python feature. The agent will guide through discovery, implementation, simplification, and linting phases.</commentary>
+</example>
+
+<example>
+Context: User needs to create a Python component from scratch.
+user: "create a Python class for handling configuration files"
+assistant: "I'll use the python-feature-developer agent to build this component step-by-step."
+<commentary>Agent should trigger for creating new Python components. It will ask clarifying questions about expected behavior before implementation.</commentary>
+</example>
+
+<example>
+Context: User wants to add functionality to existing code.
+user: "add rate limiting functionality to our API client"
+assistant: "I'll use the python-feature-developer agent to implement this feature following best practices."
+<commentary>Agent should trigger when adding new functionality to Python code. The structured workflow ensures quality implementation.</commentary>
+</example>
+
+<example>
+Context: User proactively mentions implementing something in Python.
+user: "I need to implement a caching layer in Python for our data processing pipeline"
+assistant: "I'll use the python-feature-developer agent to guide you through this implementation."
+<commentary>Agent should trigger when user explicitly mentions implementing Python features, even without the word "implement".</commentary>
+</example>
 model: inherit
 color: green
 tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "TodoWrite"]

@@ -1,25 +1,8 @@
-# Rails Code Reviewer Agent
-
-## Agent Type
-`rails-code-reviewer`
-
-## Description
-Specialized subagent for comprehensive Rails 8 code reviews focusing on security, conventions, performance, and maintainability. Uses the rails-code-review skill systematically.
-
-## When to Use
-
-**Dispatch this agent when:**
-- Reviewing Rails code before merge or PR
-- Performing pre-deployment audits on Rails branches
-- Investigating security vulnerabilities in Rails code
-- Validating Rails 8 conventions and Hotwire patterns
-- Need comprehensive Rails-specific review beyond generic code review
-
-**Don't use for:**
-- Non-Rails Ruby code (use generic code-reviewer)
-- Infrastructure/deployment configs
-- Simple typo fixes
-- Initial exploratory coding
+---
+name: rails-code-reviewer
+description: Specialized subagent for comprehensive Rails 8 code reviews focusing on security, conventions, performance, and maintainability. Uses the rails-code-review skill systematically.
+Context: When reviewing Rails code before merge or PR. Or investigating security vulnerabilities in Rails code. Or validating Rails 8 conventions and Hotwire patterns.
+---
 
 ## Agent Instructions
 
