@@ -150,12 +150,6 @@ One-command trigger for comprehensive Python code reviews following PEP 8 and Go
 
 **Usage:** `/python-code-review` - Automatically loads skill and executes systematic review
 
-### /sandi-metz-python
-
-One-command trigger for writing or refactoring Python code using Sandi Metz's OOD principles.
-
-**Usage:** `/sandi-metz-python` - Automatically loads skill and applies POODR principles to Python
-
 ### /python-feature-dev
 
 Guided Python feature development with discovery, implementation, simplification, and linting phases.
